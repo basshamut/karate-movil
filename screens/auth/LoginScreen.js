@@ -1,28 +1,34 @@
 import React, {useState} from 'react';
-import {StyleSheet, View, Text, TextInput, TouchableOpacity, Alert} from 'react-native';
-import {useNavigation} from "@react-navigation/native";
+import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import {supabase} from '../../config/SupabaseClient';
 
-const LoginScreen = () => {
-    const navigation = useNavigation();
+const LoginScreen = ({navigation}) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (!email || !password) {
             Alert.alert('Error', 'Por favor completa todos los campos');
             return;
         }
 
-        // Aquí podrías realizar la lógica de autenticación
-        Alert.alert('Inicio de Sesión', `Bienvenido, ${email}`);
-        navigation.navigate('HomeScreen'); // Ajusta el nombre del screen de inicio
+        const {error} = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) {
+            Alert.alert('Error', error.message);
+        } else {
+            Alert.alert('Inicio de sesión exitoso', 'Bienvenido de nuevo.');
+            navigation.navigate('HomeScreen'); // Redirige al HomeScreen
+        }
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Iniciar Sesión</Text>
 
-            {/* Campo de correo electrónico */}
             <TextInput
                 style={styles.input}
                 placeholder="Correo electrónico"
@@ -32,7 +38,6 @@ const LoginScreen = () => {
                 onChangeText={setEmail}
             />
 
-            {/* Campo de contraseña */}
             <TextInput
                 style={styles.input}
                 placeholder="Contraseña"
@@ -41,18 +46,10 @@ const LoginScreen = () => {
                 onChangeText={setPassword}
             />
 
-            {/* Botón de inicio de sesión */}
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Ingresar</Text>
             </TouchableOpacity>
 
-            {/* Enlace a la pantalla de registro */}
-            <TouchableOpacity
-                onPress={() => navigation.navigate('RegisterScreen')}
-                style={styles.linkContainer}
-            >
-                <Text style={styles.link}>¿No tienes cuenta? Regístrate aquí</Text>
-            </TouchableOpacity>
         </View>
     );
 };
@@ -72,12 +69,11 @@ const styles = StyleSheet.create({
     },
     input: {
         width: '80%',
-        height: 50,
+        padding: 15,
+        marginVertical: 10,
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 8,
-        paddingHorizontal: 10,
-        marginVertical: 10,
     },
     button: {
         backgroundColor: '#4CAF50',

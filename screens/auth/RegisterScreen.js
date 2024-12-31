@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { supabase } from '../../config/SupabaseClient';
-const RegisterScreen = ({ navigation }) => {
+import React, {useState} from 'react';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert} from 'react-native';
+import {supabase} from '../../config/SupabaseClient';
+
+const RegisterScreen = ({navigation}) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleSignUp = async () => {
-        const { data, error } = await supabase.auth.signUp({
+        if (!email || !password) {
+            Alert.alert('Error', 'Por favor completa todos los campos');
+            return;
+        }
+
+        const {error} = await supabase.auth.signUp({
             email,
             password,
         });
@@ -25,6 +31,7 @@ const RegisterScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Crear Cuenta</Text>
+
             <TextInput
                 style={styles.input}
                 placeholder="Correo electrónico"
@@ -33,6 +40,7 @@ const RegisterScreen = ({ navigation }) => {
                 value={email}
                 onChangeText={setEmail}
             />
+
             <TextInput
                 style={styles.input}
                 placeholder="Contraseña"
@@ -40,12 +48,19 @@ const RegisterScreen = ({ navigation }) => {
                 value={password}
                 onChangeText={setPassword}
             />
+
+            <TextInput
+                style={styles.input}
+                placeholder="Re-escribe Contraseña"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+            />
+
             <TouchableOpacity style={styles.button} onPress={handleSignUp}>
                 <Text style={styles.buttonText}>Registrarse</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
-                <Text style={styles.link}>¿Ya tienes una cuenta? Inicia sesión aquí</Text>
-            </TouchableOpacity>
+
         </View>
     );
 };
@@ -55,10 +70,12 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#fff',
         padding: 20,
     },
     title: {
         fontSize: 24,
+        fontWeight: 'bold',
         marginBottom: 20,
     },
     input: {
@@ -82,10 +99,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    linkContainer: {
+        marginTop: 20,
+    },
     link: {
         color: '#4CAF50',
         fontSize: 14,
-        marginTop: 20,
         textDecorationLine: 'underline',
     },
 });
