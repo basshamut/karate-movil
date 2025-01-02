@@ -1,0 +1,49 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - master # Cambia esto a tu rama principal
+  workflow_dispatch: # Permite ejecutar el flujo manualmente
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # Clonar el repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Configurar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Asegúrate de usar una versión compatible con Expo
+
+      # Instalar dependencias
+      - name: Install dependencies
+        run: npm install
+
+      # Autenticar con Expo
+      - name: Authenticate with Expo
+        run: npx expo login --token ${{ secrets.EXPO_TOKEN }}
+
+      # Configurar EAS
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      # Generar el APK
+      - name: Build APK
+        env:
+          EAS_NO_VCS: 1 # Evita errores si Git no está configurado
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform android --profile preview --non-interactive
+
+      # Descargar el APK
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.apk
+          path: dist/*.apk
