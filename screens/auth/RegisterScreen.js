@@ -1,18 +1,26 @@
-import React, {useState} from 'react';
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert} from 'react-native';
-import {supabase} from '../../config/SupabaseClient';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { supabase } from '../../config/SupabaseClient';
 
-const RegisterScreen = ({navigation}) => {
+const RegisterScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [displayName, setdisplayName] = useState('');
+    const [phone, setPhone] = useState('');
 
     const handleSignUp = async () => {
-        if (!email || !password) {
+        if (!email || !password || !confirmPassword || !displayName || !phone) {
             Alert.alert('Error', 'Por favor completa todos los campos');
             return;
         }
 
-        const {error} = await supabase.auth.signUp({
+        if (password !== confirmPassword) {
+            Alert.alert('Error', 'Las contraseñas no coinciden');
+            return;
+        }
+
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
         });
@@ -20,17 +28,45 @@ const RegisterScreen = ({navigation}) => {
         if (error) {
             Alert.alert('Error', error.message);
         } else {
-            Alert.alert(
-                'Registro exitoso',
-                'Se ha enviado un correo de confirmación. Por favor, verifica tu correo electrónico para activar tu cuenta.'
-            );
-            navigation.navigate('LoginScreen'); // Redirige al inicio de sesión
+            // Agregar información adicional del usuario a Supabase
+            const { error: profileError } = await supabase.from('profiles').insert([
+                {
+                    id: data.user.id, // ID único generado por Supabase
+                    email: email,
+                    // display_name: displayName,
+                    // phone: phone,
+                },
+            ]);
+
+            if (profileError) {
+                Alert.alert('Error', 'No se pudo guardar información adicional: ' + profileError.message);
+            } else {
+                Alert.alert(
+                    'Registro exitoso',
+                    'Se ha enviado un correo de confirmación. Por favor, verifica tu correo electrónico para activar tu cuenta.'
+                );
+                navigation.navigate('LoginScreen'); // Redirige al inicio de sesión
+            }
         }
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Crear Cuenta</Text>
+
+            {/*<TextInput*/}
+            {/*    style={styles.input}*/}
+            {/*    placeholder="Nombre"*/}
+            {/*    value={displayName}*/}
+            {/*    onChangeText={setdisplayName}*/}
+            {/*/>*/}
+
+            {/*<TextInput*/}
+            {/*    style={styles.input}*/}
+            {/*    placeholder="Teléfono"*/}
+            {/*    value={phone}*/}
+            {/*    onChangeText={setPhone}*/}
+            {/*/>*/}
 
             <TextInput
                 style={styles.input}
@@ -51,16 +87,15 @@ const RegisterScreen = ({navigation}) => {
 
             <TextInput
                 style={styles.input}
-                placeholder="Re-escribe Contraseña"
+                placeholder="Repite la Contraseña"
                 secureTextEntry
-                value={password}
-                onChangeText={setPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
             />
 
             <TouchableOpacity style={styles.button} onPress={handleSignUp}>
                 <Text style={styles.buttonText}>Registrarse</Text>
             </TouchableOpacity>
-
         </View>
     );
 };
@@ -98,14 +133,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
-    },
-    linkContainer: {
-        marginTop: 20,
-    },
-    link: {
-        color: '#4CAF50',
-        fontSize: 14,
-        textDecorationLine: 'underline',
     },
 });
 
