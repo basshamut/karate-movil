@@ -30,21 +30,26 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      # Configurar el Keystore
+      # Cargar y configurar el Keystore
       - name: Configure Keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+          ls -l keystore.jks # Verifica que el archivo se creó correctamente
 
       # Generar el APK
       - name: Build APK
         env:
-          EAS_NO_VCS: 1 # Evita errores si Git no está configurado
+          EAS_NO_VCS: 1 # Evita errores relacionados con Git
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           ANDROID_KEYSTORE: keystore.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: eas build --platform android --profile preview --non-interactive
+
+      # Depurar errores (si ocurren)
+      - name: Debug Build Logs
+        run: cat .eas/output.log || true
 
       # Descargar el APK
       - name: Upload APK
