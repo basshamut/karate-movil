@@ -34,7 +34,19 @@ jobs:
       - name: Configure Keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
-          ls -l keystore.jks # Verifica que el archivo se creó correctamente
+          cat <<EOF > credentials.json
+          {
+            "android": {
+              "keystore": {
+                "keystorePath": "./keystore.jks",
+                "keystorePassword": "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}",
+                "keyAlias": "${{ secrets.ANDROID_KEY_ALIAS }}",
+                "keyPassword": "${{ secrets.ANDROID_KEY_PASSWORD }}"
+              }
+            }
+          }
+          EOF
+          ls -l keystore.jks credentials.json # Verifica que ambos archivos se crearon correctamente
 
       # Generar el APK
       - name: Build APK
